@@ -62,7 +62,7 @@ public class MemberRepositoryV0 {
             con = getConnection();
             pstmt = con.prepareStatement(sql);
             pstmt.setString(1, memberId);
-            rs = pstmt.executeQuery();
+            rs = pstmt.executeQuery(); //select은 executeQuery() 사용한다. 
             if (rs.next()) {
                 Member member = new Member();
                 member.setMemberId(rs.getString("member_id"));
@@ -75,6 +75,57 @@ public class MemberRepositoryV0 {
             log.error("db erorr", e);
             throw e;
          }
+    }
+
+    public void update(String memberId, int money) throws SQLException{
+        String sql = "update member set money=? where member_id = ?";
+        Connection con =null;
+        PreparedStatement pstmt = null;
+        try {
+            //연결 메서드 호출
+            con = getConnection();
+            pstmt = con.prepareStatement(sql);
+            pstmt.setInt(1,money);
+            pstmt.setString(2, memberId);
+            int resultSize = pstmt.executeUpdate(); //준비된 값들이 데이터베이스에 실행된다. 
+            log.info("resultSize={}",resultSize);
+        } catch (SQLException e) {
+            log.info("db error",e);
+            throw e;
+        } finally{
+            //외부 리소스를 사용하기때문에 꼭 닫아줘야한다.
+            //pstmt에서 exception이 터지면 con은 close가 되지않는다. 따라서 try-catch로 감싸야한다.
+            // pstmt.close();
+            // con.close();
+
+            //호출이 보장되도록 finally에서 실행한다. 
+            close(con, pstmt, null); //DB close 메서드 호출
+        }
+    }
+
+    public void delete(String memberId) throws SQLException{
+        String sql ="delete from member where member_id = ?";
+        Connection con =null;
+        PreparedStatement pstmt = null;
+        try {
+            //연결 메서드 호출
+            con = getConnection();
+            pstmt = con.prepareStatement(sql);
+            pstmt.setString(1, memberId);
+            pstmt.executeUpdate(); //준비된 값들이 데이터베이스에 실행된다. 
+        } catch (SQLException e) {
+            log.info("db error",e);
+            throw e;
+        } finally{
+            //외부 리소스를 사용하기때문에 꼭 닫아줘야한다.
+            //pstmt에서 exception이 터지면 con은 close가 되지않는다. 따라서 try-catch로 감싸야한다.
+            // pstmt.close();
+            // con.close();
+
+            //호출이 보장되도록 finally에서 실행한다. 
+            close(con, pstmt, null); //DB close 메서드 호출
+        }
+
     }
 
     //DB close 메서드
