@@ -3,11 +3,11 @@ package hello.jdbc.service;
 import static hello.jdbc.connection.ConnectionConst.PASSWORD;
 import static hello.jdbc.connection.ConnectionConst.URL;
 import static hello.jdbc.connection.ConnectionConst.USERNAME;
-
-import java.sql.SQLException;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.sql.Connection;
+import java.sql.SQLException;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,30 +15,31 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
-import hello.jdbc.connection.ConnectionConst.*;
 import hello.jdbc.domain.Member;
-import hello.jdbc.repository.MemberRepositoryV1;
+import hello.jdbc.repository.MemberRepositoryV2;
+import lombok.extern.slf4j.Slf4j;
 
 /*
- * 기본동작, 트랜잭션이 없어서 문제 발생
+ * 트랜잭션 - 커넥션 파라미터 전달 방식 동기화 
  */
-public class MemberServiceV1Test {
+@Slf4j
+public class MemberServiceV2Test {
 
     public static final String MEMBER_A = "memberA";
     public static final String MEMBER_B = "memberB";
     public static final String MEMBER_EX = "ex";
 
-    private MemberRepositoryV1 memberRepository;
-    private MemberServiceV1 memberService;
+    private MemberRepositoryV2 memberRepository;
+    private MemberServiceV2 memberService;
 
     @BeforeEach
     void before(){
         DriverManagerDataSource dataSource = new DriverManagerDataSource(URL, USERNAME, PASSWORD);
-        memberRepository = new MemberRepositoryV1(dataSource); //dataSource를 넣어야 커넥션 실행할 수 있다.
-        memberService = new MemberServiceV1(memberRepository);
+        memberRepository = new MemberRepositoryV2(dataSource); //dataSource를 넣어야 커넥션 실행할 수 있다.
+        memberService = new MemberServiceV2(dataSource, memberRepository);
     }
 
-    //각각의 테스트가 끝나면 AfterEach가 호출된다. 
+    //각각의 테스트가 끝나면 AfterEach가 호출된다ㄴ. 
     @AfterEach
     void after() throws SQLException{
         memberRepository.delete(MEMBER_A);
@@ -56,7 +57,9 @@ public class MemberServiceV1Test {
         memberRepository.save(memberB);
 
         //when
+        log.info("start tx");
         memberService.accountTransfer(memberA.getMemberId(), memberB.getMemberId(), 2000);
+        log.info("end tx");
 
         //then
         Member findMemberA = memberRepository.findById(memberA.getMemberId());
@@ -85,9 +88,9 @@ public class MemberServiceV1Test {
         Member findMemberA = memberRepository.findById(memberA.getMemberId());
         Member findMemberEX = memberRepository.findById(memberEX.getMemberId());
         
-        //A의 돈만 2000원 감소, EX의 돈은 증가하지않았다. 
+        //memberA의 돈이 롤백 되어야함
         //service에서 validation메서드로 id가 ex면 예외발생하도록 처리했기 때문이다. 
-        assertThat(findMemberA.getMoney()).isEqualTo(8000);
+        assertThat(findMemberA.getMoney()).isEqualTo(10000);
         assertThat(findMemberEX.getMoney()).isEqualTo(10000);
 
     }
