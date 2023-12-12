@@ -6,40 +6,42 @@ import static hello.jdbc.connection.ConnectionConst.USERNAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import hello.jdbc.domain.Member;
-import hello.jdbc.repository.MemberRepositoryV2;
+import hello.jdbc.repository.MemberRepositoryV3;
 import lombok.extern.slf4j.Slf4j;
 
 /*
- * 트랜잭션 - 커넥션 파라미터 전달 방식 동기화 
+ * 트랜잭션 - 트랜잭션 템플릿
  */
 @Slf4j
-public class MemberServiceV2Test {
+public class MemberServiceV3_2Test {
 
     public static final String MEMBER_A = "memberA";
     public static final String MEMBER_B = "memberB";
     public static final String MEMBER_EX = "ex";
 
-    private MemberRepositoryV2 memberRepository;
-    private MemberServiceV2 memberService;
+    private MemberRepositoryV3 memberRepository;
+    private MemberServiceV3_2 memberService;
 
     @BeforeEach
     void before(){
         DriverManagerDataSource dataSource = new DriverManagerDataSource(URL, USERNAME, PASSWORD);
-        memberRepository = new MemberRepositoryV2(dataSource); //dataSource를 넣어야 커넥션 실행할 수 있다.
-        memberService = new MemberServiceV2(dataSource, memberRepository);
+        memberRepository = new MemberRepositoryV3(dataSource); //dataSource를 넣어야 커넥션 실행할 수 있다.
+        PlatformTransactionManager transactionManager = new DataSourceTransactionManager(dataSource); //트랜잭션매니저는 dataSource를 통해 커넥션을 한다. 
+        memberService = new MemberServiceV3_2(transactionManager, memberRepository);
     }
 
-    //각각의 테스트가 끝나면 AfterEach가 호출된다. 
+    //각각의 테스트가 끝나면 AfterEach가 호출된다ㄴ. 
     @AfterEach
     void after() throws SQLException{
         memberRepository.delete(MEMBER_A);
