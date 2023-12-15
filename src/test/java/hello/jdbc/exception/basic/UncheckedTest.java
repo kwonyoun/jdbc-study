@@ -5,6 +5,9 @@ import java.sql.SQLException;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class UncheckedTest {
     
     @Test
@@ -18,6 +21,17 @@ public class UncheckedTest {
                  * 하지만 최상위타입이기때문에 다른 체크 예외를 체크할 수 있는 기능이 무효화되고, 중요한 체크예외를 다 놓치게 된다. 
                  * 좋은 방법이 아니다.
                  */
+    }
+
+    @Test
+    void printEx(){
+        Controller controller = new Controller();
+        try {
+            controller.request();
+        } catch (Exception e) {
+            // e.printStackTrace();
+            log.info("ex",e);
+        }
     }
 
     static class Controller {
