@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Bean;
 import hello.jdbc.domain.Member;
 import hello.jdbc.repository.MemberRepository;
 import hello.jdbc.repository.MemberRepositoryV4_1;
+import hello.jdbc.repository.MemberRepositoryV4_2;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -55,10 +56,15 @@ public class MemberServiceV4Test {
         }
         
         @Bean
-        MemberRepository memberRepository(){ return new MemberRepositoryV4_1(dataSource); }
+        MemberRepository memberRepository(){ 
+            // return new MemberRepositoryV4_1(dataSource);
+            return new MemberRepositoryV4_2(dataSource);
+        }
 
         @Bean
-        MemberServiceV4 memberServiceV4(){ return new MemberServiceV4(memberRepository()); }
+        MemberServiceV4 memberServiceV4(){ 
+            return new MemberServiceV4(memberRepository()); 
+        }
     }
 
     //각각의 테스트가 끝나면 AfterEach가 호출된다. 
